@@ -109,8 +109,8 @@
   </div>
 
   <script>
-    const API_KEY = 'TU_API_KEY_AQUI';
-    const CHANNEL_ID = 'TU_CHANNEL_ID_AQUI';
+    const API_KEY = 'TU_API_KEY_REAL';
+    const CHANNEL_ID = 'TU_CHANNEL_ID_REAL';
     const MAX_RESULTS = 10;
 
     const videoCarouselTrack = document.getElementById('videoCarouselTrack');
@@ -125,20 +125,30 @@
     async function fetchVideos() {
       try {
         const res1 = await fetch(
-          `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${CHANNEL_ID}&part=snippet&order=date&maxResults=${MAX_RESULTS}`
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=${MAX_RESULTS}&order=date&type=video&key=${API_KEY}`
         );
+
+        if (!res1.ok) {
+          throw new Error('Error API search');
+        }
+
         const data1 = await res1.json();
 
-        const videoIds = data1.items
-          .map(item => item.id.videoId)
-          .filter(Boolean)
-          .join(',');
+        if (!data1.items || data1.items.length === 0) {
+          console.error('No se encontraron videos');
+          return;
+        }
 
-        if (!videoIds) return;
+        const videoIds = data1.items.map(item => item.id.videoId).join(',');
 
         const res2 = await fetch(
-          `https://www.googleapis.com/youtube/v3/videos?key=${API_KEY}&id=${videoIds}&part=snippet`
+          `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoIds}&key=${API_KEY}`
         );
+
+        if (!res2.ok) {
+          throw new Error('Error API videos');
+        }
+
         const data2 = await res2.json();
 
         data2.items.forEach(video => {
@@ -154,8 +164,8 @@
           videoCarouselTrack.appendChild(card);
         });
 
-      } catch (err) {
-        console.error('Error cargando videos:', err);
+      } catch (error) {
+        console.error('Error cargando videos:', error);
       }
     }
 
